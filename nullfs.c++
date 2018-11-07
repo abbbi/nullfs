@@ -13,6 +13,7 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/statfs.h>
 
 #include <set>
 #include <string>
@@ -27,6 +28,13 @@ static int strendswith(const char *str, const char *sfx) {
     if (str_len < sfx_len) return 0;
     return (strncmp(str + (str_len - sfx_len), sfx, sfx_len) == 0);
 };
+
+static int nullfs_statfs(const char *path, struct statvfs *statInfo)
+{
+    // return statvfs results for /
+    int rv = statvfs("/",statInfo);
+    return rv;
+}
 
 static int nullfs_isdir(const char *path) {
     set<string>::const_iterator pos = dirs.find(string(path));
@@ -204,6 +212,7 @@ int main(int argc, char *argv[]) {
     nullfs_oper.rename = nullfs_rename;
     nullfs_oper.chmod = nullfs_chmod;
     nullfs_oper.utimens = nullfs_utimens;
+    nullfs_oper.statfs = nullfs_statfs;
     return fuse_main(argc, argv, &nullfs_oper, NULL);
 };
 
